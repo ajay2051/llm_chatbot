@@ -22,9 +22,9 @@ db = SQLDatabase.from_uri(connection_uri)
 LLM_CONFIG = {
     "model": "gpt-3.5-turbo",
     "api_key": OPENAI_API_KEY,
+    "temperature": 0
 }
 llm = ChatOpenAI(**LLM_CONFIG)
-
 prompt_template = """
 You are a helpful assistant designed to safely interact with a SQL database.
 Your tasks include selecting data and answering questions about the database schema.
@@ -51,13 +51,10 @@ Question: {input}
 {agent_scratchpad}
 """
 
-# Define a custom PromptTemplate with the provided instruction
 prompt = PromptTemplate(
-    input_variables=["query"],
-    template=prompt_template,
-)
+    input_variables=["input", "agent_scratchpad", "tools", "tool_names"], template=prompt_template,)
 toolkit = SQLDatabaseToolkit(db=db, llm=llm)
-agent_executor = create_sql_agent(llm=llm, toolkit=toolkit, prompt=prompt, top_k=10, verbose=True)
+agent_executor = create_sql_agent(llm=llm, toolkit=toolkit, prompt=prompt, verbose=True, handle_parsing_errors=True)
 
-output = agent_executor.run("How many users are there")
+output = agent_executor.invoke({"input":"How many users are there"})
 print("Output...", output)
