@@ -5,6 +5,7 @@ from langchain.agents import create_sql_agent
 from langchain.agents.agent_toolkits import SQLDatabaseToolkit
 from langchain.chat_models import ChatOpenAI
 from langchain.sql_database import SQLDatabase
+from langchain_core.prompts import PromptTemplate
 
 load_dotenv()
 
@@ -23,8 +24,40 @@ LLM_CONFIG = {
     "api_key": OPENAI_API_KEY,
 }
 llm = ChatOpenAI(**LLM_CONFIG)
+
+prompt_template = """
+You are a helpful assistant designed to safely interact with a SQL database.
+Your tasks include selecting data and answering questions about the database schema.
+
+IMPORTANT: Do not modify, delete, or insert any data in the database unless explicitly asked to do so.
+If you are unsure about the action, only query or return information from the database.
+
+Available tools: {tools}
+Available tool names: {tool_names}
+
+Use the following format:
+
+Question: the input question you must answer
+Thought: you should always think about what to do
+Action: the action to take, should be one of [{tool_names}]
+Action Input: the input to the action
+Observation: the result of the action
+... (this Thought/Action/Action Input/Observation can repeat N times)
+Thought: I now know the final answer
+Final Answer: the final answer to the original input question
+
+Question: {input}
+
+{agent_scratchpad}
+"""
+
+# Define a custom PromptTemplate with the provided instruction
+prompt = PromptTemplate(
+    input_variables=["query"],
+    template=prompt_template,
+)
 toolkit = SQLDatabaseToolkit(db=db, llm=llm)
-agent_executor = create_sql_agent(llm=llm, toolkit=toolkit, verbose=True)
+agent_executor = create_sql_agent(llm=llm, toolkit=toolkit, prompt=prompt, top_k=10, verbose=True)
 
 output = agent_executor.run("How many users are there")
 print("Output...", output)
