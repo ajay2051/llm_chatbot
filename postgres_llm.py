@@ -20,9 +20,10 @@ print("Connection Successfully.....")
 
 db = SQLDatabase.from_uri(connection_uri)
 LLM_CONFIG = {
-    "model": "gpt-3.5-turbo",
+    "model": "gpt-4",
     "api_key": OPENAI_API_KEY,
-    "temperature": 0
+    "temperature": 0,
+    "max_tokens": 2000
 }
 llm = ChatOpenAI(**LLM_CONFIG)
 prompt_template = """
@@ -52,9 +53,9 @@ Question: {input}
 """
 
 prompt = PromptTemplate(
-    input_variables=["input", "agent_scratchpad", "tools", "tool_names"], template=prompt_template,)
+    input_variables=["input", "agent_scratchpad", "tools", "tool_names"], template=prompt_template, )
 toolkit = SQLDatabaseToolkit(db=db, llm=llm)
 agent_executor = create_sql_agent(llm=llm, toolkit=toolkit, prompt=prompt, verbose=True, handle_parsing_errors=True)
 
-output = agent_executor.invoke({"input":"How many users are there"})
+output = agent_executor.invoke({"input": "How many users are there"})
 print("Output...", output)
