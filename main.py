@@ -1,9 +1,8 @@
 import os
 
 import uvicorn
-
 from dotenv import load_dotenv
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import APIRouter, FastAPI, HTTPException
 from langserve import add_routes
 from pydantic import BaseModel
 from redis import Redis
